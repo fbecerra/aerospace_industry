@@ -8,7 +8,7 @@ A quick exploration of the data reveals that it is composed by nodes and links (
 
 Here each node is color-coded by the attribute “Object” and links are drawn based on the information  of the columns “source” and “target” in the edges.csv file. Although the result was nice, it felt a bit messy, so it needed some refinement.
 
-I started thinking about a better way to distribute the nodes spatially. At the same time, I wanted to make the graph more aesthetically pleasing. The solution for this was to locate the nodes in a [circular layout](https://raw.githubusercontent.com/fbecerra/aerospace_industry/master/images/fig2.png), which resulted in a visualization like this.
+I started thinking about a better way to distribute the nodes spatially. At the same time, I wanted to make the graph more aesthetically pleasing. The solution for this was to locate the nodes in a [circular layout](https://raw.githubusercontent.com/fbecerra/aerospace_industry/master/images/fig2.png).
 
 This is already looking much nicer and more appealing, but the colors (based on the attribute “Object”) do not seem to follow a particular order, which makes the user harder to see different groups in the data. To make it easier for the user to identify groups of nodes of the same “Object”, I decided to [sort the nodes](https://raw.githubusercontent.com/fbecerra/aerospace_industry/master/images/fig3.png) based on that attribute before plotting them. This new version guides the viewer to identify groups of “objects”, and hence it requires much less effort from the user.
 
