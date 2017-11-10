@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+    .links line {
+        stroke: #999;
+        stroke-opacity: 0.6;
+    }
+
+    .nodes circle {
+        stroke-width: 2px;
+    }
+
+</style>
+<svg width="960" height="600"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="queue.v1.min.js"></script>
+<script>
+
+    var svg = d3.select("svg"),
+            width = +svg.attr("width"),
+            height = +svg.attr("height");
+
+    var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+    var x_center = width/2,
+            y_center = height/2,
+            radius = height/3;
+
+    var simulation = d3.forceSimulation()
+            .force("link", d3.forceLink().id(function(d) { return d.id; }))
+            .force("charge", d3.forceManyBody())
+            .force("center", d3.forceCenter(x_center, y_center));
+
+    var n_elements;
+
+    function index_to_rad(index) {
+        return 2 * Math.PI * index / n_elements;
+    }
+
+    var x_scale = d3.scaleLinear()
+            .domain([0,1])
+            .range([x_center, x_center + radius]);
+
+    var y_scale = d3.scaleLinear()
+            .domain([0,1])
+            .range([y_center, y_center + radius]);
+
+    var duration = 50;
+
+
+    queue()
+            .defer(d3.csv, "nodes.csv")
+            .defer(d3.csv, "edges.csv")
+            .await( function(error, nodes, edges) {
+
+                if (error) throw error;
+
+                nodes = nodes.sort(function(a, b) { return d3.ascending(a.Object, b.Object); });
+
+                n_elements = nodes.length;
+
+                var link = svg.append("g")
+                        .attr("class", "links")
+                        .selectAll("line")
+                        .data(edges)
+                        .enter().append("line")
+                        .attr("stroke-width", 1)
+                        .attr("opacity", 0.5)
+                        //.attr("stroke", "#999")
+                        .attr("stroke", function(d){
+                            //return color(d.Label);
+                        })
+                        .on("mouseover", function(d){
+                            d3.select(this).transition().duration(duration)
+                                    .attr("opacity", 1)
+                                    .attr("stroke", "black")
+                                    .attr("stroke-width", 2);
+                            d3.selectAll("circle")
+                                    .filter(function(e){
+                                        return e.id === d.source.id || e.id === d.target.id})
+                                    .transition().duration(duration)
+                                    .attr("r", 10);
+                        })
+                        .on("mouseout", function(d){
+                            d3.select(this).transition().duration(duration)
+                                    .attr("opacity", 0.5)
+                                    .attr("stroke", "#999")
+                                    .attr("stroke-width", 1);
+                            d3.selectAll("circle")
+                                    .filter(function(e){
+                                        return e.id === d.source.id || e.id === d.target.id})
+                                    .transition().duration(duration)
+                                    .attr("r", 5);
+                        });
+
+                var node = svg.append("g")
+                        .attr("class", "nodes")
+                        .selectAll("circle")
+                        .data(nodes)
+                        .enter().append("circle")
+                        .attr("r", 5)
+                        .attr("fill", function(d) { return color(d.Object); })
+                        .on("mouseover", function(d){
+                            d3.select(this).transition().duration(duration)
+                                    .attr("r", 10);
+                            d3.selectAll("line")
+                                    .filter(function(e){
+                                        return e.source.id === d.id || e.target.id === d.id})
+                                    .transition().duration(duration)
+                                    .attr("opacity", 1)
+                                    .attr("stroke", "black")
+                                    .attr("stroke-width", 2);
+                            d3.selectAll("circle")
+                                    .filter(function(e){
+                                        return e.Activity === d.Activity && e.id != d.id; })
+                                    .transition().duration(duration)
+                                    .attr("stroke", "black")
+                        })
+                        .on("mouseout", function(d){
+                            d3.select(this).transition().duration(duration)
+                                    .attr("r", 5);
+                            d3.selectAll("line")
+                                    .filter(function(e){
+                                        return e.source.id === d.id || e.target.id === d.id})
+                                    .transition().duration(duration)
+                                    .attr("opacity", 0.5)
+                                    .attr("stroke", "#999")
+                                    .attr("stroke-width", 1);
+                            d3.selectAll("circle")
+                                    .filter(function(e){
+                                        return e.Activity === d.Activity && e.id != d.id; })
+                                    .transition().duration(duration)
+                                    .attr("stroke", "none")
+                        });
+
+                node.append("title")
+                        .text(function(d) { return d.label; });
+
+                simulation
+                        .nodes(nodes)
+                        .on("tick", ticked);
+
+                simulation.force("link")
+                        .links(edges);
+
+
+                function ticked() {
+                    link
+                            .attr("x1", function(d) { return x_scale(Math.sin(index_to_rad(d.source.index))); })
+                            .attr("x2", function(d) { return x_scale(Math.sin(index_to_rad(d.target.index))); })
+                            .attr("y1", function(d) { return y_scale(Math.cos(index_to_rad(d.source.index))); })
+                            .attr("y2", function(d) { return y_scale(Math.cos(index_to_rad(d.target.index))); });
+
+                    node
+                            .attr("cx", function(d, i) { return x_scale(Math.sin(index_to_rad(i))); })
+                            .attr("cy", function(d, i) { return y_scale(Math.cos(index_to_rad(i))); });
+                }
+
+            });
+
+
+</script>
